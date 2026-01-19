@@ -148,7 +148,7 @@ def send_daily_report():
 scheduler = BackgroundScheduler(timezone=pytz.timezone('Europe/Moscow'))
 scheduler.add_job(
     send_daily_report,
-    trigger=CronTrigger(hour=8, minute=40),
+    trigger=CronTrigger(hour=4, minute=42),
     id='daily_weather_report'
 )
 scheduler.start()
