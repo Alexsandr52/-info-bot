@@ -7,8 +7,8 @@ from apscheduler.triggers.cron import CronTrigger
 import telebot
 
 from config import Config
-from database import SessionLocal, Chat, deactivate_chat, is_active_chat, log_exception, save_chat, select
-from services.weather import is_valid_city
+from database import SessionLocal, Chat, deactivate_chat, is_active_chat, log_exception, save_chat, select, get_city_name
+from services.weather import is_valid_city, get_weather
 
 bot = telebot.TeleBot(Config.TELEGRAM_BOT_TOKEN)
 
@@ -103,6 +103,23 @@ def stop_bot(message):
     else:
         bot.send_message(chat_id, "⚠️ Не удалось отключить бота. Возможно, он уже неактивен.")
 
+@bot.message_handler(commands=['weather'])
+def handle_weather(message):
+    chat_id = message.chat.id
+    city = get_city_name(chat_id)
+    if not city:
+        bot.send_message(chat_id, "❌ Сначала активируйте бота командой /start")
+    else:
+        weather = get_weather(city)
+        if weather['status'] == 200:
+            bot.send_message(
+                chat_id,
+                f'🌡 В городе {weather["city"]}: {weather["temp"]}°C\n'
+                f'🤔 Ощущается как {weather["feels_like"]}°C\n'
+                f'☁️ {weather["description"]}'
+            )
+        else:
+            bot.send_message(chat_id, "❌ Не удалось получить данные о погоде. Попробуйте позже.")
 
 def send_daily_report():
     """Отправляет утренний отчёт всем активным чатам"""
@@ -131,7 +148,7 @@ def send_daily_report():
 scheduler = BackgroundScheduler(timezone=pytz.timezone('Europe/Moscow'))
 scheduler.add_job(
     send_daily_report,
-    trigger=CronTrigger(hour=7, minute=0),
+    trigger=CronTrigger(hour=8, minute=40),
     id='daily_weather_report'
 )
 scheduler.start()

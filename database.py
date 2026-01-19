@@ -90,6 +90,12 @@ def deactivate_chat(chat_id: int) -> bool:
         log_exception(e)
         return False
 
+def get_city_name(chat_id: int) -> Optional[str]:
+    """Получает название города для указанного чата"""
+    with SessionLocal() as session:
+        stmt = select(Chat).where(Chat.chat_id == chat_id, Chat.is_active == True)
+        chat = session.execute(stmt).scalar_one_or_none()
+        return chat.city if chat else None
 
 if __name__ == '__main__':
     Base.metadata.create_all(engine)
