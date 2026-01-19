@@ -71,6 +71,11 @@ OPENWEATHER_API_KEY=ваш_ключ_от_OpenWeatherMap
 
 ### Запуск бота
 
+Перед запуском убедитесь, что бд создана или создайте выполнив следующую команду.
+```bash
+python database.py
+```
+
 ```bash
 python bot.py
 ```
