@@ -25,6 +25,7 @@ class Chat(Base):
     chat_type: Mapped[str] = mapped_column(String, nullable=False)
     city: Mapped[str] = mapped_column(String, nullable=False)
     is_active: Mapped[bool] = mapped_column(Boolean, default=True)
+    reports_enabled: Mapped[bool] = mapped_column(Boolean, default=True)
 
     def __repr__(self) -> str:
         return f"Chat(chat_id={self.chat_id}, chat_type='{self.chat_type}', city='{self.city}')"
@@ -96,6 +97,30 @@ def get_city_name(chat_id: int) -> Optional[str]:
         stmt = select(Chat).where(Chat.chat_id == chat_id, Chat.is_active == True)
         chat = session.execute(stmt).scalar_one_or_none()
         return chat.city if chat else None
+
+
+def set_reports_enabled(chat_id: int, enabled: bool) -> bool:
+    """Включает или выключает ежедневную рассылку для чата"""
+    try:
+        with SessionLocal() as session:
+            stmt = select(Chat).where(Chat.chat_id == chat_id)
+            chat = session.execute(stmt).scalar_one_or_none()
+            if chat:
+                chat.reports_enabled = enabled
+                session.commit()
+                return True
+            return False
+    except Exception as e:
+        log_exception(e)
+        return False
+
+
+def are_reports_enabled(chat_id: int) -> bool:
+    """Проверяет, включена ли рассылка для чата"""
+    with SessionLocal() as session:
+        stmt = select(Chat).where(Chat.chat_id == chat_id, Chat.is_active == True)
+        chat = session.execute(stmt).scalar_one_or_none()
+        return chat.reports_enabled if chat else False
 
 if __name__ == '__main__':
     Base.metadata.create_all(engine)
